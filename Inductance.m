@@ -111,7 +111,7 @@ plot_phi(phi, nri_list(1, :), '\phi', 'n_{ri}(\phi)');
 % plot_surf(Theta, Z_i, L_yx, '\theta (radians)', 'Z (meters)', 'L_{yx}', 'L_{yx} vs Z vs \theta');
 % plot(Theta, L_yx,'red')
 % ylabel('L_{yx}');
-% xlabel('\theta (radians)');
+% xlabel('\theta  (radians)');
 % title('Inductance at end of Stack Length')
 
 
