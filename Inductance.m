@@ -1,7 +1,7 @@
 clear all;
 clc;
 
-%Variables
+% Variables
 mymodel= true;
 if mymodel
     L = 130e-6;
@@ -12,7 +12,7 @@ if mymodel
     r = 0.0642;
     g0 = 1.6e-3;
     i=1;
-    j=3;
+    j=1;
 else
     L = 0.076;
     dsl = 0.5;
@@ -20,90 +20,51 @@ else
     N= 52;
     r = 73.75e-3;
     g0 = 0.5e-3;
+    j = 1;
+    i = 1;
 end
 
-%Constants
+% Constants
 
-data_size = 100;
-h_size = 100;
+data_size = 200;
+h_size = 10000;
 alpha = ((2*pi)/45);
 gamma = ((11*pi)/180);
 theta_r = linspace(0, 2*pi, data_size);
 phi = linspace(0, 2*pi, data_size);
 z = linspace(0, L, data_size);
-d = 0.3;
+d = 0.3
 nri = ((alpha)/(2*pi));
 mu_0 = 4* pi* 10e-7;
 
 if mymodel
-    Lxy_mat = cell(6, 6);
-    turns_phases = cell(2, 3);
-    winding_phases = cell(2, 3);
-    for index = 1:3
-        turns_phases{1, index} = my_stator_turns_function(h_size, phi, st_turns,index);
-        turns_phases{2, index} = my_rotor_turns_function(h_size, data_size, phi, rt_turns, theta_r,index);
-        [Z, Phi] = meshgrid(z, phi);
-        d_z = (((dsl-dso)/L)*Z)+(dso);
-        G = g0 * (1 - (d_z .* cos(Phi)));
-        winding_phases{1, index} = winding_function(L, phi, z, G, turns_phases{1, index});
-        winding_phases{2, index} = compute_rotorwinding_data(data_size, L, phi, z, G, turns_phases{2, index});
-    end
-    for i = 0:1
-        if i > 2
-            m_t = 2;
-        else
-            m_t = 1;
-        end
-        for j = 0:1
-            n_t = mod(i, 3) + 1;
-            n_w = mod(j, 3) + 1;
-            if j > 2
-                m_w = 2;
-            else
-                m_w = 1;
-            end
-            L_yx = zeros(data_size, data_size);
-            t_f = turns_phases{m_t, n_t};
-            w_f = winding_phases{m_w, n_w};
-            for index_theta= 1:data_size
-                for index_z = 1:data_size
-                    integrand = zeros(data_size, data_size);
-                    
-                    for index_phi = 1:data_size
-                        temp = r * t_f(index_phi, index_theta) * w_f(index_phi) / G(index_phi, index_z);
-                        for l = 1:data_size
-                            integrand(index_phi, l) = temp;
-                        end
-                    end
-                    temp = trapz(phi, trapz(z, integrand, 1));
-                    L_yx(index_theta,index_z) = mu_0 * temp;
-                end
-            end
-            
-            [Z_i, Theta] = meshgrid(z, theta_r);
-            % [L_yx, Z_i, Theta] = compute_inductance_old(data_size, winding_phases{m_w, n_w}, G, phi, z, theta_r, turns_phases{m_t, n_t}, r,  mu_0);
-            % Lxy_mat{i_index ,j_index} = L_yx;
-        end
-    end
     
+    n_si = my_stator_turns_function(h_size, phi, st_turns,i);
+    
+    nri_list = my_rotor_turns_function(h_size, data_size, phi, rt_turns, theta_r,j);
 else
     n_si = turns_function(h_size, phi, N, i);
     
     nri_list = compute_nri_list(h_size, data_size, alpha, gamma, phi, j, theta_r);
-    [Z, Phi] = meshgrid(z, phi);
-    d_z = (((dsl-dso)/L)*Z)+(dso);
-    G = g0 * (1 - (d_z .* cos(Phi)));
-    statorwinding_data = winding_function(L, phi, z, G, n_si);
-    rotorwinding_data = compute_rotorwinding_data(data_size, L, phi, z, G, nri_list);
-    [L_yx, Z_i, Theta] = compute_inductance_old(data_size, statorwinding_data, G, phi, z, theta_r, nri_list, r,  mu_0);
 end
 
 Compute and plot non-uniform SE Air gap:
+[Z, Phi] = meshgrid(z, phi);
+d_z = (((dsl-dso)/L)*Z)+(dso);
+G = g0 * (1 - (d_z .* cos(Phi)));
+
+Compute and plot stator winding function:
+statorwinding_data = winding_function(L, phi, z, G, n_si);
+
+Compute and plot rotor winding function:
+rotorwinding_data = compute_rotorwinding_data(data_size, L, phi, z, G, nri_list);
+
+[L_yx, Z_i, Theta] = compute_inductance_old(data_size, statorwinding_data, G, phi, z, theta_r, nri_list, r,  mu_0);
 
 
 
 %  plot_phi(phi, n_si, '\phi', 'n_{si}(\phi)');
-plot_phi(phi, nri_list(1, :), '\phi', 'n_{ri}(\phi)');
+% plot_phi(phi, nri_list(1, :), '\phi', 'n_{ri}(\phi)');
 % plot_phi_for_each_z(phi, G, 'Phi (rad)', 'g (m)');
 % plot_surf(Phi, Z, G, 'Phi (radians)', 'Z (meters)', 'G (meters)', 'G vs Phi vs Z');
 % plot_phi(phi, statorwinding_data, '\phi', 'N_{s}(\phi)');
@@ -119,6 +80,7 @@ function res = double_integral(first_integral, second_integral, func)
 first_result = trapz(first_integral, func, 2);
 res = trapz(second_integral, first_result);
 end
+
 
 function n_si = turns_function(h_size, angle, N, i)
 n_si = 3*N/2*ones(size(angle));
