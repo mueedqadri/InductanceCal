@@ -2,7 +2,7 @@ clear all;
 clc;
 
 %Variables
-mymodel= true;
+mymodel= false;
 if mymodel
     L = 130e-6;
     dsl = 0.625;
