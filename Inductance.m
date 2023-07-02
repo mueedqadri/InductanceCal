@@ -1,7 +1,6 @@
 clear all;
 clc;
 
-%Variables
 mymodel= true;
 if mymodel
     L = 130e-6;
@@ -22,14 +21,13 @@ else
     g0 = 0.5e-3;
 end
 
-%Constants
 
 data_size = 100;
 h_size = 100;
 alpha = ((2*pi)/45);
 gamma = ((11*pi)/180);
 theta_r = linspace(0, 2*pi, data_size);
-phi = linspace(0, 2*pi, data_size);
+phi = linspace(0, 2*pi, data_size); 
 z = linspace(0, L, data_size);
 d = 0.3;
 nri = ((alpha)/(2*pi));
@@ -48,29 +46,37 @@ if mymodel
         winding_phases{1, index} = winding_function(L, phi, z, G, turns_phases{1, index});
         winding_phases{2, index} = compute_rotorwinding_data(data_size, L, phi, z, G, turns_phases{2, index});
     end
-    for i = 0:1
+
+    for i = 0:5
         if i > 2
-            m_t = 2;
+            i_t = 2;
         else
-            m_t = 1;
+            i_t = 1;
         end
-        for j = 0:1
-            n_t = mod(i, 3) + 1;
-            n_w = mod(j, 3) + 1;
+        for j = 0:5
+            j_t = mod(i, 3) + 1;
+            j_w = mod(j, 3) + 1;
             if j > 2
-                m_w = 2;
+                i_w = 2;
             else
-                m_w = 1;
+                i_w = 1;
             end
             L_yx = zeros(data_size, data_size);
-            t_f = turns_phases{m_t, n_t};
-            w_f = winding_phases{m_w, n_w};
+            t_f_temp = turns_phases{i_t, j_t};
+            w_f_temp = winding_phases{i_w, j_w};
             for index_theta= 1:data_size
                 for index_z = 1:data_size
                     integrand = zeros(data_size, data_size);
-                    
                     for index_phi = 1:data_size
-                        temp = r * t_f(index_phi, index_theta) * w_f(index_phi) / G(index_phi, index_z);
+                        if i_w == 1 && i_t ==1
+                            temp = r * t_f_temp(index_theta, index_phi) * w_f_temp(index_theta,index_phi) / G(index_phi, index_z);
+                        elseif i_w == 1 && i_t ==2
+                            temp = r * t_f_temp(index_phi, index_theta) * w_f_temp(index_theta, index_phi) / G(index_phi, index_z);
+                        elseif i_w == 2 && i_t ==1
+                            temp = r * t_f_temp(index_theta, index_phi) * w_f_temp(index_phi, index_theta) / G(index_phi, index_z);
+                        else
+                            temp = r * t_f_temp(index_phi, index_theta) * w_f_temp(index_phi, index_theta) / G(index_phi, index_z);
+                        end
                         for l = 1:data_size
                             integrand(index_phi, l) = temp;
                         end
@@ -79,13 +85,13 @@ if mymodel
                     L_yx(index_theta,index_z) = mu_0 * temp;
                 end
             end
-            
+
             [Z_i, Theta] = meshgrid(z, theta_r);
             % [L_yx, Z_i, Theta] = compute_inductance_old(data_size, winding_phases{m_w, n_w}, G, phi, z, theta_r, turns_phases{m_t, n_t}, r,  mu_0);
-            % Lxy_mat{i_index ,j_index} = L_yx;
+            Lxy_mat{i +1 ,j+1} = L_yx;
         end
     end
-    
+       
 else
     n_si = turns_function(h_size, phi, N, i);
     
@@ -98,21 +104,25 @@ else
     [L_yx, Z_i, Theta] = compute_inductance_old(data_size, statorwinding_data, G, phi, z, theta_r, nri_list, r,  mu_0);
 end
 
-Compute and plot non-uniform SE Air gap:
-
 
 
 %  plot_phi(phi, n_si, '\phi', 'n_{si}(\phi)');
-plot_phi(phi, nri_list(1, :), '\phi', 'n_{ri}(\phi)');
+% plot_phi(phi, nri_list(1, :), '\phi', 'n_{ri}(\phi)');
 % plot_phi_for_each_z(phi, G, 'Phi (rad)', 'g (m)');
 % plot_surf(Phi, Z, G, 'Phi (radians)', 'Z (meters)', 'G (meters)', 'G vs Phi vs Z');
 % plot_phi(phi, statorwinding_data, '\phi', 'N_{s}(\phi)');
 % plot_phi(phi, rotorwinding_data(20, :), '\phi', 'N_{r}(\phi)');
-% plot_surf(Theta, Z_i, L_yx, '\theta (radians)', 'Z (meters)', 'L_{yx}', 'L_{yx} vs Z vs \theta');
+plot_surf(Theta, Z_i, Lxy_mat{1, 6}, '\theta (radians)', 'Z (meters)', 'L_{yx}', 'L_{yx} vs Z vs \theta');
 % plot(Theta, L_yx,'red')
-% ylabel('L_{yx}');
-% xlabel('\theta (radians)');
-% title('Inductance at end of Stack Length')
+ylabel('L_{yx}');
+xlabel('\theta (radians)');
+title('Inductance at end of Stack Length')
+
+plot_surf(Theta, Z_i, Lxy_mat{6, 1}, '\theta (radians)', 'Z (meters)', 'L_{yx}', 'L_{yx} vs Z vs \theta');
+% plot(Theta, L_yx,'red')
+ylabel('L_{yx}');
+xlabel('\theta (radians)');
+title('Inductance at end of Stack Length')
 
 
 function res = double_integral(first_integral, second_integral, func)
@@ -148,37 +158,38 @@ end
 
 
 function n_si = my_stator_turns_function(h_size, phi, N,i)
-n_si = ((38*N)/15)*ones(size(phi));
+n_si = ((38*N)/15)*ones(size(phi)); 
 
-for h = 1:h_size
+for h = 1:h_size 
     sum1 = (((N)/(pi*h)) * (cos(2*h*(phi-(((i-1)*pi)/3))))) *((2*sin((2*h*pi)/5) + (2*sin((2*h*4*pi)/15)) - (2*sin((2*h*11*pi)/15)) - (2*sin((2*h*4*pi)/5)) + (sin((2*h*pi)/3)) - (sin((2*2*h*pi)/3))));
     sum2 = (((N)/(pi*h)) * (sin(2*h*(phi-(((i-1)*pi)/3))))) * ((5 - (2*cos((2*h*pi)/5)) - (2*cos((2*h*4*pi)/15)) + (2*cos((2*h*11*pi)/15)) + (2*cos((2*h*4*pi)/5)) - (cos(2*h*pi/3)) + (cos((2*2*h*pi)/3)) - (5*cos(2*h*pi))));
-    n_si = (n_si + sum1 + sum2)  ;
+    n_si = (n_si + sum1 + sum2)  ; 
 end
+n_si = repmat(n_si, numel(n_si), 1);
 end
 
 function nri_list = compute_nri_list(h_size, data_size, alpha, gamma, phi, j, theta_r)
-h = (1:h_size).'; % column vector
-nri_list = zeros(data_size, data_size); % preallocate result matrix
-
-for a = 1:data_size
-    for b = 1:data_size
-        sum1 = (4./(h.^2*pi*gamma)).*sin(h*alpha/2).*sin(h*gamma/2).*cos(h*(phi(b) - ((j-1)*alpha) - theta_r(a)));
-        nri_list(a, b) = sum(sum1) + alpha/(2*pi);
+    h = (1:h_size).'; % column vector
+    nri_list = zeros(data_size, data_size); % preallocate result matrix
+    
+    for a = 1:data_size
+        for b = 1:data_size
+            sum1 = (4./(h.^2*pi*gamma)).*sin(h*alpha/2).*sin(h*gamma/2).*cos(h*(phi(b) - ((j-1)*alpha) - theta_r(a)));
+            nri_list(a, b) = sum(sum1) + alpha/(2*pi);
+        end
     end
-end
 end
 
 function nri_list = my_rotor_turns_function(h_size, data_size, phi, N, theta_r,j)
 nri_list = zeros(data_size);
 for a = 1:data_size
     n_ri = 0;
-    for h = 1:h_size
+    for h = 1:h_size 
         sum1 = (((N)/(pi*h)) * (cos(2*h*(phi- theta_r(a)-(((j-1)*pi)/3))))) *((sin((h*pi)/3) + (2*sin((h*pi)/2)) + (sin((2*h*pi)/3)) - (2*sin((h*3*pi)/2)) - (sin((4*h*pi)/3)) - (sin((5*h*pi)/3))));
         sum2 = (((N)/(pi*h)) * (sin(2*h*(phi-theta_r(a)-(((j-1)*pi)/3))))) * ((4 - (cos((h*pi)/3)) - (2*cos((h*pi)/2)) - (cos((2*h*pi)/3)) +(2*cos((3*h*pi)/2))+ (cos((h*4*pi)/3)) + (cos(5*h*pi/3)) - (4*cos(2*h*pi))));
         n_ri = (n_ri + sum1 + sum2);
     end
-    
+
     nri_list(a, :) = n_ri+ (2*N);
 end
 end
@@ -189,7 +200,7 @@ L_yx = zeros(data_size, data_size);
 for index_theta= 1:data_size
     for index_z = 1:data_size
         integrand = zeros(data_size, data_size);
-        
+
         for index_phi = 1:data_size
             temp = r * nri_list(index_phi, index_theta) * statorwinding_data(index_phi) / G(index_phi, index_z);
             for l = 1:data_size
