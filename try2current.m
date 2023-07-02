@@ -3,7 +3,7 @@ clear all;
 
 
 dt = 0.0001; % time step
-tend = 0.5; % end time
+tend = 0.7; % end time
 t= 0:dt:tend;
 [n, size_t] = size(t);
 % 1. Specify input variables: Va(t), Vb(t), Vc(t), and TL(t)
@@ -66,8 +66,8 @@ for i = 1: size_t
         Is(:, :, i-1) = (inv(Labcs)*phis(:,:,i-1))-(inv(Labcs)*Labcsr*Ir(:,:,i-1));
         
         % 7. Calculate induced torque Te,i-1
-        Te(i-1) = (0.5*(Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)))+(0.5*(Ir(:,:,i-1))'* Labcrsdiff*(Is(:,:,i-1)));
-        
+        % Te(i-1) = (0.5*(Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)))+(0.5*(Ir(:,:,i-1))'* Labcrsdiff*(Is(:,:,i-1)));
+        Te(i-1) = (0.5*(Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)));
         %12. Calculate Voltges
         Va(i) = 230*sqrt(2)*sin(2*pi*f*t(i)); % replace with the actual function
         Vb(i) = 230*sqrt(2)*sin(2*pi*f*t(i)-(120*pi/180)); % replace with the actual function
@@ -78,7 +78,7 @@ for i = 1: size_t
         phir(:,:,i)= (-(R1*Ir(:,:,i-1))*dt) + phir(:,:,i-1);
         
         % 9. Calculate rotor angular speed ωi and position θi using (25) and 26
-        omega(i) = ((((1/J)*Te(i-1)- TL)-((B/J)*omega(i)))*(P/2)*dt) + omega(i-1);
+        omega(i) = (((((1/J)*Te(i-1)- TL)-((B/J)*omega(i)))*dt)*(P/2)) + omega(i-1);
         % omega(i) = (1/J*(Te(i-1)-TL-((B/J)*(omega(i)))))*dt + omega(i-1);
         theta(i) = (omega(i)*dt)+ theta(i-1);
         
@@ -103,13 +103,14 @@ hold on;
 plot(time_vector, Ir_B, 'g'); % Plot Phase B in green
 plot(time_vector, Ir_C, 'b'); % Plot Phase C in blue
 hold off;
-
 %Label the plot
 title('Current Over Time for Each Phase');
 xlabel('Time (s)');
 ylabel('Current (A)');
 legend('Phase A', 'Phase B', 'Phase C');
 
+
+omega_2 = (omega*(60/(2*pi)))*(2/P);
 plot(t,Te,'red')
-% plot(omega,Te,'red')
-plot(t,((omega*60)/(2*pi)))
+% plot(omega_2,Te,'red')
+% plot(t,omega_2)
