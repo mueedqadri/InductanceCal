@@ -2,6 +2,7 @@ clc;
 clear all;
 
 
+
 %As a general rule, your dt should be small enough that the variables you're simulating do not change drastically within each time step.
 
 dt = 0.0001; % time step
