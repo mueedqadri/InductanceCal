@@ -4,9 +4,11 @@ clear all;
 
 
 %As a general rule, your dt should be small enough that the variables you're simulating do not change drastically within each time step.
+% 0.0001
 
-dt = 0.0001; % time step
-tend = 20; % end time
+
+dt = 0.0036; % time step
+tend = 2; % end time
 t= 0:dt:tend;
 [n, size_t] = size(t);
 % 1. Specify input variables: Va(t), Vb(t), Vc(t), and TL(t)
@@ -122,9 +124,9 @@ grid on;
 % ylim([-50,50])
 
 omega_2 = (((omega)*(2/P))*60)/(2*pi);
- % plot(t,Te,'red')
+  plot(t,Te,'red')
 % grid on
 %plot(omega_2,Te,'red')
-  plot(t,omega_2)
+  % plot(t,omega_2)
  % grid on;
 % plot(t,theta)
