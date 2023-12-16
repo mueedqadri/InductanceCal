@@ -1,17 +1,18 @@
-function plotPSD(PSD_dB_fea_h, f, PSD_dB_fea_f, f_fea_f, doZoom, zoomRange, legend1, legend2)
+function plotPSD(PSD_dB_fea_h, f, PSD_dB_fea_f, f_fea_f, PSD_dB_3, f_3, doZoom, zoomRange, legend1, legend2)
     if nargin < 6
         zoomRange = [620, 800];
     end
     blue = [0 0.4470 0.7410];
     red = [0.8500 0.3250 0.0980];
-
+    Y = [0.9290 0.6940 0.1250];
 
     % Plotting
     figure;
     plot(f, PSD_dB_fea_h, 'Color', blue, 'LineWidth', 1);
     hold on;
     plot(f_fea_f, PSD_dB_fea_f, 'Color', red, 'LineWidth', 1, 'LineStyle', '-.');
-    
+    plot(f_3, PSD_dB_3, 'Color', Y, 'LineWidth', 1, 'LineStyle', '-.');
+
     xlabel('Frequency (Hz)', 'FontSize', 15);
     ylabel('PSD (dB)', 'FontSize', 15);
     set(gca, 'FontSize', 14);

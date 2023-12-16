@@ -1,4 +1,4 @@
-function plotPSD(PSD_dB_fea_h, f, PSD_dB_fea_f, f_fea_f, doZoom, zoomRange)
+function plotPSD(PSD_dB_fea_h, f, PSD_dB_fea_f, f_fea_f,  doZoom, zoomRange, legend1, legend2)
     if nargin < 6
         zoomRange = [620, 800];
     end
@@ -11,15 +11,15 @@ function plotPSD(PSD_dB_fea_h, f, PSD_dB_fea_f, f_fea_f, doZoom, zoomRange)
     plot(f, PSD_dB_fea_h, 'Color', blue, 'LineWidth', 1);
     hold on;
     plot(f_fea_f, PSD_dB_fea_f, 'Color', red, 'LineWidth', 1, 'LineStyle', '-.');
-    
+    plot(f_fea_f, PSD_dB_fea_f, 'Color', red, 'LineWidth', 1, 'LineStyle', '-.');
+
     xlabel('Frequency (Hz)', 'FontSize', 15);
-    ylabel('Power/Frequency (dB/Hz relative to 60Hz)', 'FontSize', 15);
+    ylabel('PSD (dB)', 'FontSize', 15);
     set(gca, 'FontSize', 14);
     set(gca, 'LineWidth', 1.5);
     grid on;
     xlim([0 1000]);
-    lgd = legend('Healthy', '62.5% & -62.5% offset ');
-    title('Inclined Static Eccentricity');
+    lgd = legend(legend1, legend2);
     set(lgd, 'FontSize', 14);
 
     if doZoom
@@ -38,6 +38,6 @@ function plotPSD(PSD_dB_fea_h, f, PSD_dB_fea_f, f_fea_f, doZoom, zoomRange)
         hold off;
         box off;
     end
-        axes(main_axes);
+    
     hold off;
 end

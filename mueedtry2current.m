@@ -13,7 +13,7 @@ t= 0:dt:tend;
 [n, size_t] = size(t);
 % 1. Specify input variables: Va(t), Vb(t), Vc(t), and TL(t)
 f=60;
-TL = 0; % replace with the actual function
+TL = 4.2; % replace with the actual function
 % 2. Specify initial conditions: θ0, ω0, t0=0, [ψs]0, [ψr]0
 phis  = zeros(3,1,size_t); % initial psi_s
 phir = zeros(3,1,size_t); % initial psi_r
@@ -26,38 +26,23 @@ Va = zeros(1,size_t);
 Vb = zeros(1,size_t);
 Vc = zeros(1,size_t);
 Vs = zeros(3,1,size_t);
+Labcsr_values = [];
+Labcsrdiff_values = [];
 %5. Specify constants
-Rs = 0.1535;
-Rr = 0.08175;
-% Rs = 0.166;
-% Rr = 0.08175;
 % Xls = 0.754;
 % Xm =26.13;
 % Xlr =0.754;
 % Lls = Xls/(2*pi*f);
 % Llr = Xlr/(2*pi*f);
 % Lms = Xm/(2*pi*f);
-% r = 0.0642 ;
-% g0 = 1.6e-3;
-% L = 130e-3;
-% mu_0 = 4* pi* 10^(-7);
-% Lms = ((4/2)^2)*((mu_0*pi*r*L)/g0);
 % Lmr = Lms;
+Rs = 0.1535;
+Rr = 0.08175;
+Lls = 0.211e-3;
+Llr = 0.211e-3;
 
-% Lmr = ((80/2*((0.29)^2))^2)*((mu_0*pi*r*L)/g0);
-% Lsr =((4/2)*(80/2*((0.29)^2))) *((mu_0*pi*r*L)/g0);
-% Lmr = ((20/2)^2)*((mu_0*pi*r*L)/g0);
-% Lsr = (((4*20)/4))*((mu_0*pi*r*L)/g0);
-Lls = 0.27527e-3;
-% Llr = 0.27527e-3;
-Llr = 0.27527e-3;
- Lm = 3.6514e-3;
-% Lls = 0.211e-3;
-% Llr = 0.192e-3;
-%  Lm = 3.55e-3;
+Lm = 3.6514e-3;
 Lms =(2/3)*Lm;
-Lmr = Lms;
-Lsr = Lmr;
 P = 4;
 B=0;
 % J=0.0889;
@@ -70,17 +55,11 @@ Labcs = [Lls+Lms,                  -0.5*Lms,                  -0.5*Lms;
        -0.5*Lms,                    Lls+Lms,                  -0.5*Lms;
        -0.5*Lms,                  -0.5*Lms,                   Lls+Lms ];
 
-Labcr = [Llr+Lmr,                  -0.5*Lmr,                  -0.5*Lmr;
-    -0.5*Lmr,                    Llr+Lmr,                  -0.5*Lmr;
-    -0.5*Lmr,                  -0.5*Lmr,                   Llr+Lmr ];
-% 
-% Labcs = [Lls+0.0032,                  -0.00137,                  -0.00137;
-%        -0.00137,                    Lls+0.0032,                  -0.00137;
-%        -0.00137,                  -0.00137,                   Lls+0.0032 ];
-% 
-% Labcr = [Llr+0.001976,                  -0.0008784,                  -0.0008784;
-%     -0.0008784,                    Llr+0.001976,                 -0.0008784;
-%    -0.0008784,                 -0.0008784,                   Llr+0.001976 ];
+Labcr = [Llr+Lms,                  -0.5*Lms,                  -0.5*Lms;
+    -0.5*Lms,                    Llr+Lms,                  -0.5*Lms;
+    -0.5*Lms,                  -0.5*Lms,                   Llr+Lms ];
+
+
 % 3. Specify simulation time step and end: Δt, tend
 theta = zeros(1,size_t);
 omega = zeros(1,size_t);
@@ -88,26 +67,23 @@ omega = zeros(1,size_t);
 
 for i = 1: size_t
     if i > 1
-        Labcsr= [Lsr*cos(theta(i-1)),           Lsr*cos(theta(i-1)+(2*pi/3)),    Lsr*cos(theta(i-1)-(2*pi/3));
-            Lsr*cos(theta(i-1)-2*pi/3),     Lsr*cos(theta(i-1)),            Lsr*cos(theta(i-1)+(2*pi/3));
-            Lsr*cos(theta(i-1)+(2*pi/3)),   Lsr*cos(theta(i-1)-(2*pi/3)),    Lsr*cos(theta(i-1))];
+        Labcsr= [Lms*cos(theta(i-1)),           Lms*cos(theta(i-1)+(2*pi/3)),    Lms*cos(theta(i-1)-(2*pi/3));
+            Lms*cos(theta(i-1)-2*pi/3),     Lms*cos(theta(i-1)),            Lms*cos(theta(i-1)+(2*pi/3));
+            Lms*cos(theta(i-1)+(2*pi/3)),   Lms*cos(theta(i-1)-(2*pi/3)),    Lms*cos(theta(i-1))];
         Labcrs = (Labcsr)';
         % 13. Differentiation
-        Labcsrdiff = [-Lsr*sin(theta(i-1)),             -Lsr*sin(theta(i-1)+(2*pi/3)),    -Lsr*sin(theta(i-1)-(2*pi/3));
-            -Lsr*sin(theta(i-1)-2*pi/3),     -Lsr*sin(theta(i-1)),             -Lsr*sin(theta(i-1)+(2*pi/3));
-            -Lsr*sin(theta(i-1)+(2*pi/3)),   -Lsr*sin(theta(i-1)-(2*pi/3)),    -Lsr*sin(theta(i-1))];
-         % Labcsrdiff = [-0.004195*sin(theta(i-1)),             -0.004195*sin(theta(i-1)+(2*pi/3)),    -0.004195*sin(theta(i-1)-(2*pi/3));
-        %     -0.004195*sin(theta(i-1)-2*pi/3),     -0.004195*sin(theta(i-1)),             -0.004195*sin(theta(i-1)+(2*pi/3));
-        %     -0.004195*sin(theta(i-1)+(2*pi/3)),   -0.004195*sin(theta(i-1)-(2*pi/3)),    -0.004195*sin(theta(i-1))];
-        % Labcrsdiff =  (Labcsrdiff)';
+        Labcsrdiff = [-Lms*sin(theta(i-1)),             -Lms*sin(theta(i-1)+(2*pi/3)),    -Lms*sin(theta(i-1)-(2*pi/3));
+            -Lms*sin(theta(i-1)-2*pi/3),     -Lms*sin(theta(i-1)),             -Lms*sin(theta(i-1)+(2*pi/3));
+            -Lms*sin(theta(i-1)+(2*pi/3)),   -Lms*sin(theta(i-1)-(2*pi/3)),    -Lms*sin(theta(i-1))];
+        Labcrsdiff =  (Labcsrdiff)';
         % 6. Calculate current vectors [Is]i-1 and [Ir]i-1 using (23) and (24)
          Ir(:, : , i-1)= ((inv(Labcr-((Labcsr)'*inv(Labcs)*Labcsr)))*(N*phir(:,:,i-1) - ((Labcsr)'*inv(Labcs)*phis(:,:,i-1))));
          % Ir(:, : , i-1) = inv(Labcrs*Labcsr-Labcr)*(((Labcrs*inv(Labcs)*phis(:,:,i-1))-phir(:,:,i-1));
          Is(:, :, i-1) = (inv(Labcs)*phis(:,:,i-1))-(inv(Labcs)*Labcsr*Ir(:,:,i-1));
         
         % 7. Calculate induced torque Te,i-1
-        Te(i-1) = (P/2)*((((0.5*(Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)))+(0.5*(Ir(:,:,i-1))'* Labcrsdiff*(Is(:,:,i-1))))));
-         % Te(i-1) = (P/2)*((Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)));
+      Te(i-1) = P/2*( (((0.5*(Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)))+(0.5*(Ir(:,:,i-1))'* Labcrsdiff*(Is(:,:,i-1))))));
+        % Te(i-1) = (P/2)*((Is(:,:,i-1))'* Labcsrdiff*(Ir(:,:,i-1)));
         % %12. Calculate Voltges
         Va(i) = Vm*sin(2*pi*f*t(i)); % replace with the actual function
         Vb(i) = Vm*sin(2*pi*f*t(i)-(120*pi/180)); % replace with the actual function
@@ -124,6 +100,9 @@ for i = 1: size_t
         
         % 10. ti=ti-1+Δt
         % t(i) = t(i-1) + dt;
+        % Flattening and storing the values
+        Labcsr_values = [Labcsr_values; Labcsr(:)];
+        Labcsrdiff_values = [Labcsrdiff_values; Labcsrdiff(:)];
     end
 end
 
@@ -151,11 +130,20 @@ legend('Phase A', 'Phase B', 'Phase C');
 grid on;
 % ylim([-50,50])
 
-omega_2 = (((omega)*(2/P))*60)/(2*pi);
-   % plot(t,Te,'red')
-%grid on
- % plot(omega_2,Te,'red')
- % plot(t,omega_2)
- % grid on;
- % plot(t,theta)
-  % plot(omega_2, Ir_A, 'r'); % Plot Phase A in red
+% omega_2 = (((omega)*(2/P))*60)/(2*pi);
+  plot(t,Te,'red')
+% grid on
+% plot(omega_2,Te,'red')
+%   plot(t,omega_2)
+%  grid on;
+% plot(t,theta)
+% Plotting
+figure;
+plot(Labcsr_values, 'b-'); % Plot Labcsr in blue
+hold on;
+plot(Labcsrdiff_values, 'r-'); % Plot Labcsrdiff in red
+hold off;
+title('Labcsr and Labcsrdiff Values');
+xlabel('Index');
+ylabel('Value');
+legend('Labcsr', 'Labcsrdiff');
